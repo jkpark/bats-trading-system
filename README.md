@@ -36,9 +36,20 @@ PYTHONPATH=. python3 src/backtest_cli.py --report backtest_results_YYYYMMDD_HHMM
 - `risk_per_trade`: 회당 리스크 비율 (0.01 = 1%)
 
 ## Setup
-1. `.env` 파일에 Binance API Key를 설정합니다. (테스트넷 권장)
+1. `.env.local` 파일에 Binance API 및 Discord Webhook을 설정합니다.
+   ```env
+   BINANCE_API_KEY=your_key
+   BINANCE_API_SECRET=your_secret
+   DISCORD_WEBHOOK_URL=your_webhook_url
+   ```
 2. 의존성 설치: `pip install -r requirements.txt`
 3. 시스템 실행: `python src/main.py` (실제 매매 모드)
+
+## Notifications
+Discord Webhook을 통한 실시간 매매 알림 기능이 내장되어 있습니다.
+- **Trade Alerts**: 매매 체결 시 종목, 가격, 수량 알림.
+- **System Logs**: 에러 발생 시 즉시 알림.
+- 상세 내용은 [docs/notifier.md](docs/notifier.md)를 참고하세요.
 
 ## License
 이 프로젝트는 교육 및 연구 목적으로 제작되었습니다. 실제 투자 손실에 대한 책임은 사용자에게 있습니다.
