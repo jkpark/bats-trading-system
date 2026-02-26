@@ -16,7 +16,7 @@ class ExchangeProviderInterface(ABC):
 class TechnicalAnalysisInterface(ABC):
     @abstractmethod
     def calculate_indicators(self, df):
-        """Calculates N (ATR), Donchian Channels, EMA, etc."""
+        """Calculates N (ATR), Donchian Channels, EMA, ADX, etc."""
         pass
 
 class SignalManagerInterface(ABC):

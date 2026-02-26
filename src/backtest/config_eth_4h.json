@@ -1,0 +1,9 @@
+{
+  "symbol": "ETHUSDT",
+  "interval": "4h",
+  "limit": 1000,
+  "initial_balance": 10000,
+  "risk_per_trade": 0.01,
+  "max_units": 4,
+  "strategy": "TurtleSignalManager"
+}

@@ -12,6 +12,7 @@ env/
 .vscode/
 .idea/
 
-# OS
-.DS_Store
-Thumbs.db
+# Project Files
+*.json
+!src/backtest/*.json
+backtest_results_*.json

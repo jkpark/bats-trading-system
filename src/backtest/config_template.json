@@ -1,0 +1,15 @@
+{
+  "symbol": "BTCUSDT",
+  "interval": "1h",
+  "limit": 1000,
+  "initial_balance": 10000,
+  "risk_per_trade": 0.01,
+  "max_units": 4,
+  "strategy": "TurtleSignalManager",
+  "strategy_params": {
+    "s1_entry": 20,
+    "s1_exit": 10,
+    "s2_entry": 55,
+    "s2_exit": 20
+  }
+}
