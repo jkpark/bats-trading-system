@@ -157,8 +157,8 @@ class LiteMainLoop:
 
             self.logger.info("Function: Calculating Indicators")
             analyzed = self.ta.calculate_indicators(data)
-            n_val = analyzed[-1]['N']
-            n_avg_20 = sum(d['N'] for d in analyzed[-20:]) / 20
+            n_val = analyzed['N'].iloc[-1]
+            n_avg_20 = analyzed['N'].iloc[-20:].mean()
 
             self.logger.info(f"Function: Generating Signal (Price: {current_price}, N: {n_val:.2f})")
             sig = self.signal.generate_signal(analyzed, current_price, self.state)

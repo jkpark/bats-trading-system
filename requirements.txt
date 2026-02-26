@@ -1,4 +1,5 @@
 python-binance
 pandas
+numpy
 python-dotenv
 pyyaml

@@ -13,6 +13,8 @@ class BacktestEngine:
         self.symbol = self.config.get('symbol', 'BTCUSDT')
         self.interval = self.config.get('interval', '1h')
         self.limit = self.config.get('limit', 1000)
+        self.start_time = self.config.get('start_time')
+        self.end_time = self.config.get('end_time')
         self.initial_balance = self.config.get('initial_balance', 10000)
         self.risk_per_trade = self.config.get('risk_per_trade', 0.01)
         self.max_units = self.config.get('max_units', 4)
@@ -30,21 +32,38 @@ class BacktestEngine:
         self.equity_curve = []
 
     def fetch_data(self):
-        print(f"Fetching {self.limit} candles for {self.symbol}...")
-        url = f"https://api.binance.com/api/v3/klines?symbol={self.symbol}&interval={self.interval}&limit={self.limit}"
-        with urlopen(url) as response:
-            data = json.loads(response.read().decode())
-            klines = []
-            for k in data:
-                klines.append({
-                    'timestamp': k[0],
-                    'open': float(k[1]),
-                    'high': float(k[2]),
-                    'low': float(k[3]),
-                    'close': float(k[4]),
-                    'volume': float(k[5])
-                })
-            return klines
+        print(f"Fetching data for {self.symbol}...")
+        all_klines = []
+        current_start = self.start_time if self.start_time else (int(datetime.now().timestamp() * 1000) - (self.limit * 24 * 60 * 60 * 1000))
+        end_target = self.end_time if self.end_time else int(datetime.now().timestamp() * 1000)
+        
+        while current_start < end_target:
+            url = f"https://api.binance.com/api/v3/klines?symbol={self.symbol}&interval={self.interval}&startTime={current_start}&limit=1000"
+            if self.end_time:
+                url += f"&endTime={self.end_time}"
+                
+            with urlopen(url) as response:
+                data = json.loads(response.read().decode())
+                if not data:
+                    break
+                all_klines.extend(data)
+                # Move start time to the next candle
+                current_start = data[-1][0] + 1
+                if len(data) < 1000:
+                    break
+        
+        klines = []
+        for k in all_klines:
+            klines.append({
+                'timestamp': k[0],
+                'open': float(k[1]),
+                'high': float(k[2]),
+                'low': float(k[3]),
+                'close': float(k[4]),
+                'volume': float(k[5])
+            })
+        print(f"Total candles fetched: {len(klines)}")
+        return klines
 
     def run(self):
         raw_data = self.fetch_data()

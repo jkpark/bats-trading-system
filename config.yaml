@@ -1,7 +1,7 @@
 system:
-  polling_interval: 5  # Seconds
-  test_mode: false  # true: Binance Testnet, false: Binance Mainnet
-  real_execution: false # true: Execute real orders, false: Mock print only
+  polling_interval: 60  # 매 시간마다 조회할 것이므로 60초로 상향 조정
+  test_mode: true  # 모의투자 (Futures Testnet)
+  real_execution: true # 실제 주문 실행 활성화 (Testnet 계정 내)
 
 risk:
   max_portfolio_heat: 0.2  # 20% total risk limit
@@ -9,7 +9,7 @@ risk:
   default_leverage: 1
 
 strategies:
-  - name: "TrendFollowing"
+  - name: "TurtleTrendFollowing"
     enabled: true
     symbol: "BTCUSDT"
-    timeframe: "1h"
+    timeframe: "4h"  # 백테스트에서 성과가 좋았던 4시간 봉 설정

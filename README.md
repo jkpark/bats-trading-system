@@ -2,15 +2,15 @@
 
 BATS는 Binance API를 기반으로 한 암호화폐 자동 매매 시스템입니다. 현재 터틀 트레이딩(Turtle Trading) 전략을 기본으로 하며, 강력한 백테스트 엔진과 리포트 기능을 갖추고 있습니다.
 
-## Project Structure
-- `src/`: Source code
-  - `core/`: Exchange provider, Risk manager, Signal manager (Turtle)
-  - `backtest/`: Backtest engine, Reporter, Configurations
-  - `strategies/`: Strategy implementations
-  - `utils/`: Configuration and logging utilities
-- `docs/`: Design and API documentation
-- `config.yaml`: Runtime configuration
-- `tests/`: Unit tests and integration tests
+### 1. Main System (`src/main_lite.py`)
+- **Lite Architecture**: 외부 라이브러리 의존성을 최소화하면서도 `pandas`, `numpy`를 활용하여 효율적인 데이터 처리를 수행합니다.
+- **Daemon Mode**: `--daemon` 플래그 사용 시 `bats.log` 파일에 로그를 기록하며 백그라운드 실행에 최적화되어 있습니다.
+- **Real-time Monitoring**: Polling 방식으로 실시간 가격과 지표를 감시하며, Discord를 통해 즉각적인 알림을 전송합니다.
+
+### 2. Core Logic (`src/core/`)
+- **Indicator Engine**: ATR($N$), Donchian Channels, EMA-200, ADX 등을 `pandas` 벡터 연산으로 계산하여 정확도와 속도를 확보했습니다.
+- **Risk Manager**: 1% 리스크 모델, Volatility Cap(변동성 급증 시 유닛 축소), MDD 기반 가상 자산 축소 로직이 구현되어 있습니다.
+- **Signal Manager**: Turtle S1/S2/S3 시스템을 지원하며 ADX 필터 및 EMA 추세 필터를 포함합니다.
 
 ## Backtest (백테스트)
 시스템에는 시뮬레이션을 위한 백테스트 엔진이 포함되어 있습니다.
