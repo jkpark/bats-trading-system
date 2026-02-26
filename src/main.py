@@ -18,8 +18,9 @@ def main():
         config = yaml.safe_load(f)
     
     # 2. Initialize Modules
-    # Using 'testnet=True' for safety
-    exchange = ExchangeProvider(testnet=True)
+    # Use test_mode from config
+    test_mode = config.get('system', {}).get('test_mode', True)
+    exchange = ExchangeProvider(testnet=test_mode)
     ta = TechnicalAnalysisEngine()
     signal = TurtleSignalManager()
     risk = RiskManager()

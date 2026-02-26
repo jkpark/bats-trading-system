@@ -1,7 +1,7 @@
 system:
   polling_interval: 5  # Seconds
-  test_mode: true
-  real_execution: false
+  test_mode: false  # true: Binance Testnet, false: Binance Mainnet
+  real_execution: false # true: Execute real orders, false: Mock print only
 
 risk:
   max_portfolio_heat: 0.2  # 20% total risk limit
