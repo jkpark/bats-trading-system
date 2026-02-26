@@ -9,7 +9,9 @@ class ExchangeProvider:
     Binance API Wrapper for Market Data and Account Info.
     """
     def __init__(self, testnet=True):
-        load_dotenv()
+        # Prefer .env.local, fallback to .env
+        load_dotenv('.env.local')
+        load_dotenv() # Fallback
         api_key = os.getenv('BINANCE_API_KEY')
         api_secret = os.getenv('BINANCE_API_SECRET')
         
