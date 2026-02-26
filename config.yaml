@@ -1,0 +1,15 @@
+system:
+  polling_interval: 5  # Seconds
+  test_mode: true
+  real_execution: false
+
+risk:
+  max_portfolio_heat: 0.2  # 20% total risk limit
+  unit_risk_percent: 0.01  # 1% risk per unit (N-based)
+  default_leverage: 1
+
+strategies:
+  - name: "TrendFollowing"
+    enabled: true
+    symbol: "BTCUSDT"
+    timeframe: "1h"
