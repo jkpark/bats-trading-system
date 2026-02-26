@@ -1,54 +1,67 @@
 import json
+import os
 from datetime import datetime
 
 class BacktestReporter:
     @staticmethod
-    def display(results_path):
-        with open(results_path, 'r') as f:
-            data = json.load(f)
-        
-        summary = data['summary']
-        config = data['config']
-        
-        print("\n" + "="*50)
-        print(" BATS TRADING SYSTEM - BACKTEST REPORT ".center(50, "="))
-        print("="*50)
-        
-        print(f"\n[CONFIGURATION]")
-        print(f"  Symbol:          {config['symbol']}")
-        print(f"  Interval:        {config['interval']}")
-        print(f"  Initial Balance: {config['initial_balance']:,.2f} USDT")
-        print(f"  Risk per Trade:  {config['risk_per_trade']*100:.1f}%")
-        
-        print(f"\n[SUMMARY]")
-        print(f"  Final Equity:    {summary['final_equity']:,.2f} USDT")
-        print(f"  Total Return:    {summary['total_return_pct']:.2f}%")
-        print(f"  Max Drawdown:    {summary['max_drawdown_pct']:.2f}%")
-        print(f"  Win Rate:        {summary['win_rate_pct']:.2f}% ({summary['total_exits']} closed trades)")
-        print(f"  Total Actions:   {summary['total_trades']}")
-        
-        print(f"\n[TRADE DETAILS]")
-        print(f"  {'Timestamp':<20} | {'Symbol':<10} | {'Type':<8} | {'Price':<10} | {'Detail'}")
-        print("-" * 78)
-        
-        for t in data['trades']:
-            ts = datetime.fromtimestamp(t['timestamp']/1000).strftime('%Y-%m-%d %H:%M')
-            sym = t.get('symbol', config['symbol'])
-            if t['type'] == 'EXIT':
-                detail = f"Gain: {t['gain']:>+10.2f} USDT"
-            elif t.get('type') in ['BUY', 'PYRAMID']:
-                detail = f"Unit: {t.get('units_held', '?')}, Bal: {t['balance']:,.2f}"
-            else:
-                detail = f"Bal: {t['balance']:,.2f}"
-            print(f"  {ts:<20} | {sym:<10} | {t['type']:<8} | {t['price']:<10.2f} | {detail}")
-            
-        print("\n" + "="*50)
-        print(" END OF REPORT ".center(50, "="))
-        print("="*50 + "\n")
+    def display(result_path):
+        if not os.path.exists(result_path):
+            print(f"Error: Result file {result_path} not found.")
+            return
 
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) > 1:
-        BacktestReporter.display(sys.argv[1])
-    else:
-        print("Usage: python report.py <results_json_path>")
+        with open(result_path, 'r') as f:
+            results = json.load(f)
+            
+        config = results.get('config', {})
+        summary = results.get('summary', {})
+        trades = results.get('trades', [])
+        
+        # Period Calculation
+        start_ts = trades[0]['timestamp'] if trades else 0
+        end_ts = trades[-1]['timestamp'] if trades else 0
+        start_date = datetime.fromtimestamp(start_ts / 1000).strftime('%Y-%m-%d') if start_ts else "N/A"
+        end_date = datetime.fromtimestamp(end_ts / 1000).strftime('%Y-%m-%d') if end_ts else "N/A"
+
+        print("\n" + "="*50)
+        print("===== BATS TRADING SYSTEM - BACKTEST REPORT =====")
+        print("="*50)
+
+        print("\n[CONFIGURATION]")
+        print(f"  Symbol:          {config.get('symbol')}")
+        print(f"  Interval:        {config.get('interval')}")
+        print(f"  Period:          {start_date} ~ {end_date}")
+        print(f"  Strategy:        {config.get('strategy', 'N/A')}")
+        
+        strategy_params = config.get('strategy_params', {})
+        params_str = ", ".join([f"{k}={v}" for k, v in strategy_params.items()])
+        print(f"  Strategy Params: {params_str}")
+
+        print("\n[SUMMARY]")
+        print(f"  Initial Balance: {summary.get('initial_balance', 0):,.2f} USDT")
+        print(f"  Final Equity:    {summary.get('final_equity', 0):,.2f} USDT")
+        print(f"  Total Return:    {summary.get('total_return_pct', 0):.2f}%")
+        print(f"  Max Drawdown:    {summary.get('max_drawdown_pct', 0):.2f}%")
+        print(f"  Win Rate:        {summary.get('win_rate_pct', 0):.2f}% ({summary.get('total_exits', 0)} closed trades)")
+        print(f"  Total Actions:   {summary.get('total_trades', 0)}")
+
+        print("\n[TRADE DETAILS]")
+        print(f"{'Timestamp':<20} | {'Type':<8} | {'Price':<10} | {'Units':<5} | {'Result'}")
+        print("-" * 75)
+        
+        for trade in trades:
+            ts = datetime.fromtimestamp(trade['timestamp'] / 1000).strftime('%Y-%m-%d %H:%M')
+            ttype = trade['type']
+            price = f"{trade['price']:.2f}"
+            units = str(trade.get('units_held', '-'))
+            
+            result = ""
+            if ttype == 'EXIT':
+                gain = trade.get('gain', 0)
+                result = f"{gain:+.2f} USDT"
+                units = "0"
+            
+            print(f"{ts:<20} | {ttype:<8} | {price:<10} | {units:<5} | {result}")
+
+        print("\n" + "="*50)
+        print("================= END OF REPORT ==================")
+        print("="*50 + "\n")
