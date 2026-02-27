@@ -31,12 +31,18 @@ def main():
     logging.info(" BATS TRADING SYSTEM - STARTING")
     logging.info("==========================================")
     
-    with open("config.yaml", "r") as f:
+    # Load config
+    config_path = "config.yaml"
+    if not os.path.exists(config_path):
+        logging.error(f"Config file not found: {config_path}")
+        sys.exit(1)
+        
+    with open(config_path, "r") as f:
         config = yaml.safe_load(f)
     
     test_mode = config.get('system', {}).get('test_mode', True)
     
-    # Binance library is mandatory
+    # Core Components Initialization
     try:
         exchange = ExchangeProvider(testnet=test_mode)
         execution = BinanceExecutionEngine(exchange.client)
@@ -46,7 +52,7 @@ def main():
         sys.exit(1)
 
     ta = TechnicalAnalysisEngine()
-    signal = TurtleSignalManager(
+    signal_manager = TurtleSignalManager(
         use_s1=config.get('strategies', [{}])[0].get('use_s1', True),
         use_s2=config.get('strategies', [{}])[0].get('use_s2', True)
     )
@@ -59,12 +65,11 @@ def main():
         'max_heat': config['risk']['max_portfolio_heat']
     }
     
-    bot = MainLoop(loop_config, exchange, ta, signal, risk, execution)
+    # Start Main Loop
+    bot = MainLoop(loop_config, exchange, ta, signal_manager, risk, execution)
     
-    try:
-        bot.start()
-    except KeyboardInterrupt:
-        bot.stop()
+    # Start bot (Signal handling is now internal to MainLoop)
+    bot.start()
 
 if __name__ == "__main__":
     main()

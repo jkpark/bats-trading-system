@@ -1,5 +1,6 @@
 import time
 import logging
+import signal
 from src.utils.persistence import JSONPersistence
 from src.core.notification_manager import NotificationManager
 
@@ -7,17 +8,25 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger("BATS-Main")
 
 class MainLoop:
-    def __init__(self, config, exchange, ta, signal, risk, execution):
+    def __init__(self, config, exchange, ta, signal_manager, risk, execution):
         self.config = config
         self.exchange = exchange
         self.ta = ta
-        self.signal = signal
+        self.signal_manager = signal_manager
         self.risk = risk
         self.execution = execution
         self.persistence = JSONPersistence()
         self.state = self.persistence.load()
         self.is_running = False
         self.notifier = NotificationManager()
+        
+        # Register signal handlers for graceful shutdown
+        signal.signal(signal.SIGINT, self._handle_interrupt)
+        signal.signal(signal.SIGTERM, self._handle_interrupt)
+
+    def _handle_interrupt(self, signum, frame):
+        logger.info(f"Received signal {signum}. Initiating safe shutdown...")
+        self.stop()
 
     def run_once(self):
         """A single iteration of the trading loop."""
@@ -45,49 +54,41 @@ class MainLoop:
                 n_avg_20 = sum(d['N'] for d in df_analyzed[-20:]) / len(df_analyzed[-20:])
 
             # 3. Signal Generation
-            signal = self.signal.generate_signal(df_analyzed, current_price, self.state)
+            sig = self.signal_manager.generate_signal(df_analyzed, current_price, self.state)
             
-            if signal == "HOLD":
+            if sig == "HOLD":
                 return
 
-            logger.info(f"Signal Generated: {signal} at {current_price}")
+            logger.info(f"Signal Generated: {sig} at {current_price}")
 
             # 4. Risk Management & Execution
-            if signal in ["BUY", "PYRAMID"]:
+            if sig in ["BUY", "PYRAMID"]:
                 balance = self.exchange.get_asset_balance("USDT")
                 unit_size = self.risk.calculate_unit_size(balance, n_value, current_price, n_avg_20)
                 
                 # Simple logic for current heat: units_held / 4 (max 4)
-                current_heat = (self.state['units_held'] * 0.01) # Assuming each unit is 1% risk
+                current_heat = (self.state.get('units_held', 0) * 0.01) # Assuming each unit is 1% risk
                 
                 if unit_size > 0 and self.risk.can_entry(current_heat, self.config.get('max_heat', 0.2)):
                     self.execution.execute_order(symbol, "BUY", unit_size)
-                    self.state['units_held'] += 1
+                    self.state['units_held'] = self.state.get('units_held', 0) + 1
                     
-                    # Set system mode based on which breakout was hit (S1 or S2)
-                    # For simplicity, we can check the price against DC channels here or pass it from signal
-                    if signal == "BUY":
-                        # If it's the first unit, we need to know if it was S1 or S2
-                        # This is a bit tricky without modifying generate_signal return value.
-                        # For now, let's assume S1 if not specified.
+                    if sig == "BUY":
                         if 'system_mode' not in self.state:
                              self.state['system_mode'] = 'S1'
                     
-                    # Track entry price for future Stop Loss/Pyramiding
                     if 'entry_prices' not in self.state: self.state['entry_prices'] = []
                     self.state['entry_prices'].append(current_price)
-                    self.state['current_n'] = n_value # Store N for stop loss
+                    self.state['current_n'] = n_value
                     self.persistence.save(self.state)
-                    logger.info(f"Executed {signal}: {unit_size} units at {current_price}")
-                    self.notifier.send_trade(signal, symbol, current_price, unit_size)
+                    logger.info(f"Executed {sig}: {unit_size} units at {current_price}")
+                    self.notifier.send_trade(sig, symbol, current_price, unit_size)
             
-            elif signal == "EXIT":
-                if self.state['units_held'] > 0:
-                    # In a real system, we'd calculate total quantity to sell
+            elif sig == "EXIT":
+                if self.state.get('units_held', 0) > 0:
                     self.execution.execute_order(symbol, "SELL", 0) 
                     
-                    # Calculate win/loss for Skip Rule
-                    last_entry = self.state['entry_prices'][-1] if self.state['entry_prices'] else current_price
+                    last_entry = self.state['entry_prices'][-1] if self.state.get('entry_prices') else current_price
                     trade_result = "win" if current_price > last_entry else "loss"
                     self.state['last_trade_result'] = trade_result
                     
@@ -105,11 +106,35 @@ class MainLoop:
     def start(self):
         self.is_running = True
         logger.info("Starting BATS Main Loop...")
-        while self.is_running:
-            self.run_once()
-            sleep_time = self.config.get('polling_interval', 60)
-            time.sleep(sleep_time)
+        try:
+            while self.is_running:
+                self.run_once()
+                
+                # Responsive sleep: check is_running every second
+                polling_interval = self.config.get('polling_interval', 60)
+                for _ in range(polling_interval):
+                    if not self.is_running:
+                        break
+                    time.sleep(1)
+        finally:
+            self.shutdown()
 
     def stop(self):
         self.is_running = False
         logger.info("Stopping BATS Main Loop...")
+
+    def shutdown(self):
+        """Final cleanup and persistence before exiting."""
+        logger.info("Performing final shutdown tasks...")
+        try:
+            # 1. Save final state
+            self.persistence.save(self.state)
+            logger.info("Final state saved successfully.")
+            
+            # 2. Notify shutdown
+            self.notifier.send_status("System Offline", "BATS Trading System has been shut down safely.")
+            
+        except Exception as e:
+            logger.error(f"Error during shutdown: {e}")
+        
+        logger.info("BATS System shutdown complete.")
