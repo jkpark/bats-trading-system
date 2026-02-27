@@ -1,6 +1,4 @@
-from src.core.interfaces import SignalManagerInterface
-
-class TurtleSignalManager(SignalManagerInterface):
+class TurtleSignalManager:
     """
     Improved Turtle Trading Signal Generator:
     - S1: 20-day breakout (with Skip Rule) -> Optional

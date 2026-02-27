@@ -1,8 +1,7 @@
 import time
 import logging
-from src.core.interfaces import ExchangeProviderInterface, TechnicalAnalysisInterface, SignalManagerInterface, RiskManagerInterface, ExecutionEngineInterface
 from src.utils.persistence import JSONPersistence
-from src.utils.notifier import DiscordNotifier
+from src.core.notification_manager import NotificationManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("BATS-Main")
@@ -18,7 +17,7 @@ class MainLoop:
         self.persistence = JSONPersistence()
         self.state = self.persistence.load()
         self.is_running = False
-        self.notifier = DiscordNotifier()
+        self.notifier = NotificationManager()
 
     def run_once(self):
         """A single iteration of the trading loop."""
@@ -80,7 +79,7 @@ class MainLoop:
                     self.state['current_n'] = n_value # Store N for stop loss
                     self.persistence.save(self.state)
                     logger.info(f"Executed {signal}: {unit_size} units at {current_price}")
-                    self.notifier.send_trade_notification(signal, symbol, current_price, unit_size)
+                    self.notifier.send_trade(signal, symbol, current_price, unit_size)
             
             elif signal == "EXIT":
                 if self.state['units_held'] > 0:
@@ -97,11 +96,11 @@ class MainLoop:
                     self.state['current_n'] = 0
                     self.persistence.save(self.state)
                     logger.info(f"Executed EXIT at {current_price} (Result: {trade_result})")
-                    self.notifier.send_trade_notification("EXIT", symbol, current_price, 0, status=f"RESULT: {trade_result.upper()}")
+                    self.notifier.send_trade("EXIT", symbol, current_price, 0, status=f"RESULT: {trade_result.upper()}")
 
         except Exception as e:
             logger.error(f"Error in main loop iteration: {e}")
-            self.notifier.send_error_notification(f"Main Loop Error: {str(e)}")
+            self.notifier.send_error(f"Main Loop Error: {str(e)}")
 
     def start(self):
         self.is_running = True
