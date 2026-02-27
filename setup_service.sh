@@ -4,7 +4,7 @@
 APP_NAME="bats-trading-system"
 APP_DIR="/home/jkpark/.openclaw/workspace-jeff/bats-trading-system"
 PYTHON_BIN="/usr/bin/python3"
-SCRIPT_PATH="$APP_DIR/src/main_lite.py"
+SCRIPT_PATH="$APP_DIR/src/main.py"
 USER="jkpark"
 
 SERVICE_FILE="/etc/systemd/system/$APP_NAME.service"
@@ -13,7 +13,7 @@ echo "Creating systemd service file..."
 
 cat <<EOF | sudo tee $SERVICE_FILE
 [Unit]
-Description=BATS Trading System Lite
+Description=BATS Trading System
 After=network.target
 
 [Service]
