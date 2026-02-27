@@ -4,7 +4,6 @@ import signal
 from src.utils.persistence import JSONPersistence
 from src.core.notification_manager import NotificationManager
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("BATS-Main")
 
 class MainLoop:

@@ -8,7 +8,7 @@ from src.core.modules_impl import BinanceExecutionEngine
 from src.core.modules_impl import TechnicalAnalysisEngine, RiskManager
 from src.core.signal_manager import TurtleSignalManager
 
-def setup_logging(log_file=None):
+def setup_logging():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     for handler in logger.handlers[:]:
@@ -17,15 +17,10 @@ def setup_logging(log_file=None):
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
-    if log_file:
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
     return logger
 
 def main():
-    log_file = "bats.log" if "--daemon" in sys.argv else None
-    setup_logging(log_file)
+    setup_logging()
     
     logging.info("==========================================")
     logging.info(" BATS TRADING SYSTEM - STARTING")
