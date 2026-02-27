@@ -6,6 +6,7 @@ venv/
 .env.local
 bats.log
 state.json
+config.local.yaml
 backtest_results_*.json
 .vscode/
 .idea/

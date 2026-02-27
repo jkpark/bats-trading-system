@@ -2,6 +2,7 @@ import os
 import yaml
 import logging
 import sys
+from src.utils.config_loader import load_config
 from src.main_loop import MainLoop
 from src.core.exchange_provider import ExchangeProvider
 from src.core.modules_impl import BinanceExecutionEngine
@@ -26,14 +27,11 @@ def main():
     logging.info(" BATS TRADING SYSTEM - STARTING")
     logging.info("==========================================")
     
-    # Load config
-    config_path = "config.yaml"
-    if not os.path.exists(config_path):
-        logging.error(f"Config file not found: {config_path}")
+    # Load config using layered approach (Priority: config.local.yaml > config.yaml)
+    config = load_config()
+    if not config:
+        logging.error("Failed to load configuration.")
         sys.exit(1)
-        
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
     
     test_mode = config.get('system', {}).get('test_mode', True)
     
@@ -53,12 +51,14 @@ def main():
     )
     risk = RiskManager()
     
-    loop_config = {
-        'symbol': config['strategies'][0]['symbol'],
-        'interval': config['strategies'][0]['timeframe'],
-        'polling_interval': config['system']['polling_interval'],
-        'max_heat': config['risk']['max_portfolio_heat']
-    }
+    loop_config = config.copy()
+    # Add flattened access for convenience in MainLoop.run_once if needed, 
+    # but MainLoop seems to expect some keys at top level and some nested.
+    # To maintain compatibility with existing MainLoop.run_once logic:
+    loop_config['symbol'] = config['strategies'][0]['symbol']
+    loop_config['interval'] = config['strategies'][0]['timeframe']
+    loop_config['polling_interval'] = config['system']['polling_interval']
+    loop_config['max_heat'] = config['risk']['max_portfolio_heat']
     
     # Start Main Loop
     bot = MainLoop(loop_config, exchange, ta, signal_manager, risk, execution)

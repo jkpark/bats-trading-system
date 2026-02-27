@@ -1,0 +1,11 @@
+# config.local.yaml - Local overrides (Not tracked by git)
+# Copy this file to config.local.yaml and add your sensitive credentials.
+
+notification:
+  channel:
+    type: "discord"
+    webhook_url: "https://discord.com/api/webhooks/1476488385664127129/orQrv4K_h3ABt7EuloPqiJSN_R5npQSRMp5vgTM-IodQaKR0vTh4tl8Hj8MBXYJ_Q8IZ"
+
+# You can also override other settings for local testing
+system:
+  test_mode: true
