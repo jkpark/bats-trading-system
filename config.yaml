@@ -13,3 +13,8 @@ strategies:
     enabled: true
     symbol: "BTCUSDT"
     timeframe: "4h"  # 백테스트에서 성과가 좋았던 4시간 봉 설정
+
+notification:
+  channel:
+    type: "discord"
+    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"

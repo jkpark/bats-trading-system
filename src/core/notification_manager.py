@@ -1,44 +1,35 @@
-import os
-import json
 import logging
-from urllib import request, error
+from src.core.notification_channel import NotificationChannel
+
 
 class NotificationManager:
     """
-    Manages all system notifications (Discord, etc.)
+    Manages all system notifications.
+    Uses DI pattern to receive a NotificationChannel implementation.
     """
-    def __init__(self, webhook_url=None):
-        self.webhook_url = webhook_url or os.getenv("DISCORD_WEBHOOK_URL")
+
+    def __init__(self, channel: NotificationChannel = None):
+        self.channel = channel
         self.logger = logging.getLogger("NotificationManager")
-        if not self.webhook_url:
-            self.logger.warning("DISCORD_WEBHOOK_URL is not set. Notifications will be disabled.")
+        if not self.channel:
+            self.logger.warning("NotificationChannel is not set. Notifications will be disabled.")
 
     def _send_payload(self, payload):
-        if not self.webhook_url:
+        if not self.channel:
             return False
-        
+
         try:
-            data = json.dumps(payload).encode('utf-8')
-            req = request.Request(
-                self.webhook_url, 
-                data=data, 
-                headers={'Content-Type': 'application/json', 'User-Agent': 'BATS-Notifier/1.0'}
-            )
-            with request.urlopen(req) as response:
-                return response.status == 204
-        except error.HTTPError as e:
-            self.logger.error(f"Discord API Error: {e.code} - {e.read().decode()}")
-            return False
+            return self.channel.send(payload)
         except Exception as e:
-            self.logger.error(f"Discord Notification Error: {e}")
+            self.logger.error(f"Notification Error: {e}")
             return False
 
     def send_trade(self, side, symbol, price, quantity, status="SUCCESS"):
         """매매 체결 알림 (Embed 형식)"""
         color = 0x00ff00 if side.upper() == "BUY" else 0xff0000
         if status != "SUCCESS":
-            color = 0x808080 # Gray for failed
-            
+            color = 0x808080  # Gray for failed
+
         embed = {
             "title": f"Trade Notification: {status}",
             "color": color,
@@ -50,7 +41,7 @@ class NotificationManager:
             ],
             "footer": {"text": "BATS Trading System | Notification Manager"}
         }
-        
+
         payload = {"embeds": [embed]}
         return self._send_payload(payload)
 
@@ -62,7 +53,7 @@ class NotificationManager:
             "color": 0xff0000,
             "footer": {"text": "BATS Trading System | Notification Manager"}
         }
-        
+
         payload = {"embeds": [embed]}
         return self._send_payload(payload)
 
@@ -71,7 +62,7 @@ class NotificationManager:
         embed = {
             "title": title,
             "description": message,
-            "color": 0x3498db, # Blue
+            "color": 0x3498db,  # Blue
             "footer": {"text": "BATS Trading System | Notification Manager"}
         }
         payload = {"embeds": [embed]}

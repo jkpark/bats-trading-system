@@ -3,6 +3,7 @@ import logging
 import signal
 from src.utils.persistence import JSONPersistence
 from src.core.notification_manager import NotificationManager
+from src.core.discord_notification_channel import DiscordNotificationChannel
 
 logger = logging.getLogger("BATS-Main")
 
@@ -17,7 +18,7 @@ class MainLoop:
         self.persistence = JSONPersistence()
         self.state = self.persistence.load()
         self.is_running = False
-        self.notifier = NotificationManager()
+        self.notifier = self._create_notifier()
         
         # Register signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._handle_interrupt)
@@ -26,6 +27,26 @@ class MainLoop:
     def _handle_interrupt(self, signum, frame):
         logger.info(f"Received signal {signum}. Initiating safe shutdown...")
         self.stop()
+
+    def _create_notifier(self):
+        """config.yaml의 notification 설정을 기반으로 NotificationManager를 생성한다."""
+        notification_config = self.config.get('notification')
+        if not notification_config:
+            return NotificationManager(channel=None)
+
+        channel_config = notification_config.get('channel', {})
+        channel_type = channel_config.get('type')
+        if not channel_type:
+            return NotificationManager(channel=None)
+
+        channel = None
+        if channel_type == 'discord':
+            webhook_url = channel_config.get('webhook_url')
+            channel = DiscordNotificationChannel(webhook_url=webhook_url)
+        else:
+            logger.warning(f"Unknown notification channel type: {channel_type}")
+
+        return NotificationManager(channel=channel)
 
     def run_once(self):
         """A single iteration of the trading loop."""
