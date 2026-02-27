@@ -75,16 +75,16 @@ class BacktestEngine:
         
         print(f"Starting backtest for {self.symbol} ({self.interval})...")
         
-        # Determine the starting index based on the longest lookback (e.g., 55 for S2)
-        start_idx = 55 
+        # Determine the starting index based on the longest lookback (e.g., 90 for S3)
+        start_idx = 90
         
         for i in range(start_idx, len(analyzed_data)):
-            current_bar = analyzed_data[i]
+            current_bar = analyzed_data.iloc[i]
             price = current_bar['close']
             self.state['current_n'] = current_bar['N']
             
             # Generate signal based on data up to now
-            signal = signal_manager.generate_signal(analyzed_data[:i+1], price, self.state)
+            signal = signal_manager.generate_signal(analyzed_data.iloc[:i+1], price, self.state)
             
             self._handle_signal(signal, price, current_bar)
             
