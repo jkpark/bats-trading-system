@@ -13,6 +13,12 @@ strategies:
     enabled: true
     symbol: "BTCUSDT"
     timeframe: "4h"  # 백테스트에서 성과가 좋았던 4시간 봉 설정
+    strategy_params:
+      use_s1: false
+      use_s2: false
+      use_s3: true
+      adx_filter_threshold: 25.0
+      stop_n_multiplier: 5.0
 
 notification:
   channel:

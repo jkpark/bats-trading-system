@@ -2,8 +2,7 @@ import json
 import os
 from datetime import datetime
 from urllib.request import urlopen
-from src.core.modules_impl import TechnicalAnalysisEngine, RiskManager
-from src.core.signal_manager import TurtleSignalManager
+from src.core import TechnicalAnalysisEngine, RiskManager, TurtleSignalManager
 
 class BacktestEngine:
     def __init__(self, config_path):

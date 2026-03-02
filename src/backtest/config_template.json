@@ -7,9 +7,10 @@
   "max_units": 4,
   "strategy": "TurtleSignalManager",
   "strategy_params": {
-    "s1_entry": 20,
-    "s1_exit": 10,
-    "s2_entry": 55,
-    "s2_exit": 20
+    "use_s1": true,
+    "use_s2": true,
+    "use_s3": true,
+    "adx_filter_threshold": 25.0,
+    "stop_n_multiplier": 5.0
   }
 }

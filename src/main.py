@@ -1,13 +1,17 @@
 import os
-import yaml
-import logging
 import sys
-from src.utils.config_loader import load_config
+import logging
+import yaml
+
+# Ensure the project root is in sys.path for direct execution
+# This allows running 'python3 src/main.py' from the project root without PYTHONPATH
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+
+from src.utils import load_config
 from src.main_loop import MainLoop
-from src.core.exchange_provider import ExchangeProvider
-from src.core.modules_impl import BinanceExecutionEngine
-from src.core.modules_impl import TechnicalAnalysisEngine, RiskManager
-from src.core.signal_manager import TurtleSignalManager
+from src.core import ExchangeProvider, BinanceExecutionEngine, TechnicalAnalysisEngine, RiskManager, TurtleSignalManager
 
 def setup_logging():
     logger = logging.getLogger()
@@ -45,10 +49,18 @@ def main():
         sys.exit(1)
 
     ta = TechnicalAnalysisEngine()
-    signal_manager = TurtleSignalManager(
-        use_s1=config.get('strategies', [{}])[0].get('use_s1', True),
-        use_s2=config.get('strategies', [{}])[0].get('use_s2', True)
-    )
+    
+    # Strategy parameters from config
+    strategy_config = config.get('strategies', [{}])[0]
+    strategy_params = strategy_config.get('strategy_params', {
+        'use_s1': False,
+        'use_s2': False,
+        'use_s3': True,
+        'adx_filter_threshold': 25.0,
+        'stop_n_multiplier': 5.0
+    })
+    
+    signal_manager = TurtleSignalManager(**strategy_params)
     risk = RiskManager()
     
     loop_config = config.copy()
