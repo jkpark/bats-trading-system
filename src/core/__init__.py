@@ -1,4 +1,4 @@
-from .signal_manager import TurtleSignalManager
+from .signal_manager import TurtleSignalManager, AdvancedTurtleManager
 from .exchange_provider import ExchangeProvider
 from .modules_impl import TechnicalAnalysisEngine, RiskManager, BinanceExecutionEngine
 from .notification_manager import NotificationManager

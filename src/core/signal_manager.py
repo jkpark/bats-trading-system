@@ -89,3 +89,47 @@ class TurtleSignalManager:
             return "BUY"
 
         return "HOLD"
+
+class AdvancedTurtleManager(TurtleSignalManager):
+    """
+    Advanced Turtle Trading Signal Generator:
+    - Inherits from TurtleSignalManager
+    - ADX Filter Threshold: 30 (Default)
+    - Hard Stop Multiplier: 3.0 (Default)
+    - Additional Filter: RSI(14) > 55
+    - Additional Filter: Volume > 20-day Volume SMA
+    """
+    def __init__(self, use_s1=False, use_s2=False, use_s3=True, 
+                 adx_filter_threshold=30.0, stop_n_multiplier=3.0, 
+                 rsi_threshold=55.0, volume_filter=True):
+        super().__init__(use_s1, use_s2, use_s3, adx_filter_threshold, stop_n_multiplier)
+        self.rsi_threshold = rsi_threshold
+        self.volume_filter = volume_filter
+
+    def generate_signal(self, df, current_price, state):
+        # 1. Exit Logic (Inherit)
+        units_held = state.get('units_held', 0)
+        if units_held > 0:
+            return super().generate_signal(df, current_price, state)
+
+        # 2. Entry Logic (Extended)
+        def get_val(key):
+            if hasattr(df, 'iloc'): # Pandas
+                return df[key].iloc[-1]
+            else: # List of dicts
+                return df[-1][key]
+
+        # 2c. Additional Filter: RSI
+        rsi = get_val('rsi_14')
+        if rsi < self.rsi_threshold:
+            return "HOLD"
+
+        # 2d. Additional Filter: Volume
+        if self.volume_filter:
+            volume = get_val('volume')
+            vol_sma = get_val('vol_sma_20')
+            if volume < vol_sma:
+                return "HOLD"
+
+        # 3. Call Base Signal for ADX, EMA, Breakout
+        return super().generate_signal(df, current_price, state)
