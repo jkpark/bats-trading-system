@@ -54,6 +54,16 @@ class TechnicalAnalysisEngine:
         
         # 4. Trend Filter (EMA 200)
         df['ema_200'] = df['close'].ewm(span=200, adjust=False).mean()
+
+        # 5. RSI(14)
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
+        df['rsi_14'] = 100 - (100 / (1 + rs))
+
+        # 6. Volume Filter (SMA 20)
+        df['vol_sma_20'] = df['volume'].rolling(window=20).mean()
         
         return df
 

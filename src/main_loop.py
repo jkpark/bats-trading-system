@@ -1,9 +1,8 @@
 import time
 import logging
 import signal
-from src.utils.persistence import JSONPersistence
-from src.core.notification_manager import NotificationManager
-from src.core.discord_notification_channel import DiscordNotificationChannel
+from src.utils import JSONPersistence
+from src.core import NotificationManager, DiscordNotificationChannel
 
 logger = logging.getLogger("BATS-Main")
 

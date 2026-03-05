@@ -1,9 +1,9 @@
 import json
 import os
+import pandas as pd
 from datetime import datetime
 from urllib.request import urlopen
-from src.core.modules_impl import TechnicalAnalysisEngine, RiskManager
-from src.core.signal_manager import TurtleSignalManager
+from src.core import TechnicalAnalysisEngine, RiskManager, TurtleSignalManager, AdvancedTurtleManager
 
 class BacktestEngine:
     def __init__(self, config_path):
@@ -34,27 +34,44 @@ class BacktestEngine:
     def fetch_data(self):
         print(f"Fetching data for {self.symbol}...")
         all_klines = []
-        current_start = self.start_time if self.start_time else (int(datetime.now().timestamp() * 1000) - (self.limit * 24 * 60 * 60 * 1000))
-        end_target = self.end_time if self.end_time else int(datetime.now().timestamp() * 1000)
         
-        while current_start < end_target:
-            url = f"https://api.binance.com/api/v3/klines?symbol={self.symbol}&interval={self.interval}&startTime={current_start}&limit=1000"
-            if self.end_time:
-                url += f"&endTime={self.end_time}"
-                
-            with urlopen(url) as response:
-                data = json.loads(response.read().decode())
-                if not data:
-                    break
-                all_klines.extend(data)
-                # Move start time to the next candle
-                current_start = data[-1][0] + 1
-                if len(data) < 1000:
-                    break
+        # Calculate start time based on limit if not provided
+        # Binance limit per request is 1000.
+        limit_per_request = 1000
+        total_needed = self.limit
         
-        klines = []
+        # Interval in milliseconds
+        interval_ms = 3600000 # Default 1h
+        if self.interval == '4h': interval_ms *= 4
+        elif self.interval == '1d': interval_ms *= 24
+        
+        end_time = self.end_time if self.end_time else int(datetime.now().timestamp() * 1000)
+        start_time = self.start_time if self.start_time else (end_time - (total_needed * interval_ms))
+        
+        current_start = start_time
+        while len(all_klines) < total_needed:
+            fetch_limit = min(limit_per_request, total_needed - len(all_klines))
+            url = f"https://api.binance.com/api/v3/klines?symbol={self.symbol}&interval={self.interval}&startTime={current_start}&limit={fetch_limit}"
+            
+            try:
+                with urlopen(url) as response:
+                    data = json.loads(response.read().decode())
+                    if not data:
+                        break
+                    all_klines.extend(data)
+                    current_start = data[-1][0] + interval_ms
+                    if len(data) < fetch_limit:
+                        break
+            except Exception as e:
+                print(f"Error fetching data: {e}")
+                break
+        
+        print(f"Total candles fetched: {len(all_klines)}")
+        
+        # Format to expected DataFrame structure
+        formatted_data = []
         for k in all_klines:
-            klines.append({
+            formatted_data.append({
                 'timestamp': k[0],
                 'open': float(k[1]),
                 'high': float(k[2]),
@@ -62,16 +79,21 @@ class BacktestEngine:
                 'close': float(k[4]),
                 'volume': float(k[5])
             })
-        print(f"Total candles fetched: {len(klines)}")
-        return klines
-
+            
+        return pd.DataFrame(formatted_data)
+        
     def run(self):
         raw_data = self.fetch_data()
         ta = TechnicalAnalysisEngine()
         analyzed_data = ta.calculate_indicators(raw_data)
         
         strategy_params = self.config.get('strategy_params', {})
-        signal_manager = TurtleSignalManager(**strategy_params)
+        strategy_class_name = self.config.get('strategy', 'TurtleSignalManager')
+        
+        if strategy_class_name == 'AdvancedTurtleManager':
+            signal_manager = AdvancedTurtleManager(**strategy_params)
+        else:
+            signal_manager = TurtleSignalManager(**strategy_params)
         
         print(f"Starting backtest for {self.symbol} ({self.interval})...")
         
@@ -94,7 +116,9 @@ class BacktestEngine:
                 for i_pos in range(len(self.state['entry_prices'])):
                     entry_price = self.state['entry_prices'][i_pos]
                     notional = self.state['notionals'][i_pos]
-                    current_equity += notional * (price / entry_price) - notional
+                    # The notional was already subtracted from self.balance during buy.
+                    # Equity is remaining cash + current value of positions.
+                    current_equity += notional * (price / entry_price)
             
             self.equity_curve.append({
                 'timestamp': current_bar['timestamp'],

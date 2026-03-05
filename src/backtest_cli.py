@@ -1,8 +1,14 @@
 import argparse
 import os
 import sys
-from src.backtest.engine import BacktestEngine
-from src.backtest.report import BacktestReporter
+
+# Ensure the project root is in sys.path for direct execution
+# This allows running 'python3 src/backtest_cli.py' from the project root without PYTHONPATH
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+
+from src.backtest import BacktestEngine, BacktestReporter
 
 def main():
     parser = argparse.ArgumentParser(description="BATS Backtest CLI")
