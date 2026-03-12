@@ -49,5 +49,17 @@ class TestMainLoop(unittest.TestCase):
         loop.run_once()
         self.execution.execute_order.assert_not_called()
 
+    @patch('src.main_loop.JSONPersistence')
+    def test_start_sends_online_notification(self, MockP):
+        loop = self._make_loop(MockP)
+        loop.notifier = MagicMock()
+        # start()가 무한루프이므로 run_once에서 바로 stop
+        loop.run_once = MagicMock(side_effect=lambda: loop.stop())
+        loop.start()
+        loop.notifier.send_status.assert_any_call(
+            "System Online",
+            "BATS Trading System has started successfully."
+        )
+
 if __name__ == '__main__':
     unittest.main()

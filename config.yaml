@@ -1,24 +1,33 @@
 system:
-  polling_interval: 60  # 매 시간마다 조회할 것이므로 60초로 상향 조정
-  test_mode: true  # 모의투자 (Futures Testnet)
-  real_execution: true # 실제 주문 실행 활성화 (Testnet 계정 내)
+  polling_interval: 60
+  test_mode: false  # 실제 투자 모드
+  real_execution: true
 
 risk:
-  max_portfolio_heat: 0.2  # 20% total risk limit
-  unit_risk_percent: 0.01  # 1% risk per unit (N-based)
+  max_portfolio_heat: 0.2  # 포트폴리오 전체 최대 리스크 (20%)
+  unit_risk_percent: 0.01  # 유닛당 기본 리스크 (1%)
   default_leverage: 1
 
-strategies:
-  - name: "TurtleTrendFollowing"
+# 다중 심볼 리스트
+symbols:
+  - name: "BTCUSDT"
     enabled: true
-    symbol: "BTCUSDT"
-    timeframe: "4h"  # 백테스트에서 성과가 좋았던 4시간 봉 설정
-    strategy_params:
-      use_s1: false
-      use_s2: false
-      use_s3: true
-      adx_filter_threshold: 25.0
-      stop_n_multiplier: 5.0
+    leverage: 10
+    timeframe: "4h"
+    strategy: "TurtleTrendFollowing"
+  - name: "ETHUSDT"
+    enabled: true
+    leverage: 10
+    timeframe: "4h"
+    strategy: "TurtleTrendFollowing"
+
+# 전략 공통 파라미터
+strategy_params:
+  use_s1: false
+  use_s2: false
+  use_s3: true
+  adx_filter_threshold: 25.0
+  stop_n_multiplier: 5.0
 
 notification:
   channel:

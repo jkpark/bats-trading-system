@@ -70,6 +70,7 @@ class TechnicalAnalysisEngine:
 class RiskManager:
     def calculate_unit_size(self, balance: float, n_value: float, price: float, n_avg_20=None) -> float:
         if n_value == 0 or np.isnan(n_value): return 0.0
+        # Unit size is balance * 1% / N
         unit_size = (balance * 0.01) / n_value
 
         # Volatility Cap: Reduce by 50% if current N is 1.5x of 20-day average N
@@ -78,8 +79,18 @@ class RiskManager:
 
         return round(float(unit_size), 6)
 
-    def can_entry(self, current_heat: float, max_heat: float) -> bool:
-        return current_heat < max_heat
+    def calculate_total_heat(self, symbols_state: dict, unit_risk_percent: float = 0.01) -> float:
+        """
+        Calculate total portfolio heat (Σ units_held * unit_risk_percent).
+        """
+        total_units = sum(s.get('units_held', 0) for s in symbols_state.values())
+        return total_units * unit_risk_percent
+
+    def can_entry(self, current_heat: float, max_heat: float, new_unit_risk: float = 0.01) -> bool:
+        """
+        Check if adding a new unit will keep total heat within limits.
+        """
+        return (current_heat + new_unit_risk) <= max_heat
 
 class BinanceExecutionEngine:
     def __init__(self, client):

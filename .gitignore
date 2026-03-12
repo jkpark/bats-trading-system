@@ -4,7 +4,7 @@ __pycache__/
 venv/
 .env
 .env.local
-bats.log
+*.log
 state.json
 config.local.yaml
 backtest_results_*.json
