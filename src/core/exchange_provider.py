@@ -54,13 +54,10 @@ class ExchangeProvider:
         Fetch available balance for a specific asset.
         """
         try:
-            account = self.client.get_account()
-            for balance in account['balances']:
-                if balance['asset'] == asset:
-                    return float(balance['free'])
-            return 0.0
+            balance = self.client.get_asset_balance(asset=asset)
+            return float(balance['free']) if balance else 0.0
         except BinanceAPIException as e:
-            print(f"Error fetching balance: {e}")
+            print(f"Error fetching balance for {asset}: {e}")
             return 0.0
 
 if __name__ == "__main__":

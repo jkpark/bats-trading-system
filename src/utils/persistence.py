@@ -11,11 +11,24 @@ class JSONPersistence:
     def __init__(self, filepath="state.json"):
         self.filepath = filepath
         self.default_state = {
-            "last_trade_result": "loss",
-            "units_held": 0,
-            "entry_prices": [], # For Pyramiding & Stop Loss
-            "system_mode": "S1" # Current active system
+            "total_heat": 0.0,
+            "symbols": {}
         }
+
+    def get_symbol_state(self, state, symbol):
+        """Helper to get a symbol's state or create it with defaults."""
+        if "symbols" not in state:
+            state["symbols"] = {}
+        
+        if symbol not in state["symbols"]:
+            state["symbols"][symbol] = {
+                "last_trade_result": "loss",
+                "units_held": 0,
+                "entry_prices": [],
+                "system_mode": "S1",
+                "current_n": 0
+            }
+        return state["symbols"][symbol]
 
     def load(self):
         if not os.path.exists(self.filepath):

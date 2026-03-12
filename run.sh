@@ -3,7 +3,7 @@
 # BATS Trading System - Build & Run Script
 # This script ensures a clean restart of the background service.
 
-PROJECT_DIR="/home/jkpark/.openclaw/workspace-jeff/bats-trading-system"
+PROJECT_DIR="/Users/jkpark/.openclaw/workspace-jeff/bats-trading-system"
 SERVICE_NAME="bats-trading-system"
 
 # 1. Navigate to project directory

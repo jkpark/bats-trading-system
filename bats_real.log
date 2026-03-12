@@ -1,0 +1,11 @@
+/Users/jkpark/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+2026-03-09 13:15:24,830 [INFO] root: ==========================================
+2026-03-09 13:15:24,830 [INFO] root:  BATS TRADING SYSTEM - STARTING
+2026-03-09 13:15:24,830 [INFO] root: ==========================================
+2026-03-09 13:15:24,831 [INFO] root: Loading local configuration from config.local.yaml
+2026-03-09 13:15:24,905 [INFO] root: Successfully initialized Binance Exchange Provider and Execution Engine
+2026-03-09 13:15:24,905 [INFO] BATS-Persistence: State loaded from state.json: {'last_trade_result': 'loss', 'units_held': 0, 'entry_prices': [], 'system_mode': 'S1'}
+2026-03-09 13:15:24,905 [INFO] BATS-Main: Starting BATS Main Loop...
+2026-03-11 02:05:23,641 [ERROR] BATS-Main: Error in main loop iteration: HTTPSConnectionPool(host='api.binance.com', port=443): Read timed out. (read timeout=10)
+2026-03-12 06:29:01,765 [ERROR] BATS-Main: Error in main loop iteration: HTTPSConnectionPool(host='api.binance.com', port=443): Read timed out. (read timeout=10)
